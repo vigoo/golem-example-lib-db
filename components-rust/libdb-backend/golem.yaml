@@ -9,7 +9,7 @@
 httpApi:
   definitions:
     libdb-backend-api:
-      version: '0.0.1'
+      version: "0.0.1"
       routes:
         - method: GET
           path: /libdb-backend-api
@@ -20,7 +20,7 @@ httpApi:
               let agent = frontend();
               let file = agent.index();
               {
-                headers: { 
+                headers: {
                   Content-Type: "text/html; charset=utf-8"
                 },
                 body: file
@@ -112,10 +112,6 @@ httpApi:
 components:
   libdb:backend:
     templates: rust
-    files:
-      - sourcePath: index.html
-        targetPath: /index.html
-        permissions: read-only
 
     # Component environment variables can reference system environment variables with minijinja syntax:
     #
@@ -152,7 +148,6 @@ components:
       ## Ollama
       # GOLEM_OLLAMA_BASE_URL: "<URL>" # Optional, defaults to http://localhost:11434
 
-
       # Graph database providers
       # ------------------------
 
@@ -174,7 +169,6 @@ components:
       # NEO4J_PORT: "<PORT>" # Optional, defaults to 7687
       # NEO4J_USER: "<USER>"
       # NEO4J_PASSWORD: "<PASS>"
-
 
       # Search providers
       # ----------------
@@ -205,7 +199,6 @@ components:
       ## Typesense
       # TYPESENSE_BASE_URL: "<URL>"
       # TYPESENSE_API_KEY: "<KEY>"
-
 
       # Speech-to-text providers
       # ------------------------
@@ -239,7 +232,6 @@ components:
       ## Whisper
       # OPENAI_API_KEY: "<KEY>"
 
-
       # Video generation providers
       # --------------------------
 
@@ -257,7 +249,6 @@ components:
       # VEO_PROJECT_ID: "<ID>"
       # VEO_CLIENT_EMAIL: "<EMAIL>"
       # VEO_PRIVATE_KEY: "<KEY>"
-
 
       # WebSearch providers
       # -------------------
@@ -306,7 +297,6 @@ components:
       # - type: wasm
       #   url: https://github.com/golemcloud/golem-ai/releases/download/v0.4.0-dev.1/golem_llm_ollama-dev.wasm
 
-
       # Code execution providers
       # ------------------------
 
@@ -322,7 +312,6 @@ components:
       # - type: wasm
       #   url: https://github.com/golemcloud/golem-ai/releases/download/v0.4.0-dev.1/golem_exec_javascript-dev.wasm
 
-
       # Graph database providers
       # ------------------------
 
@@ -337,7 +326,6 @@ components:
       ## Neo4j
       # - type: wasm
       #   url: https://github.com/golemcloud/golem-ai/releases/download/v0.4.0-dev.1/golem_graph_neo4j-dev.wasm
-
 
       # Search providers
       # ----------------
@@ -362,7 +350,6 @@ components:
       # - type: wasm
       #   url: https://github.com/golemcloud/golem-ai/releases/download/v0.4.0-dev.1/golem_search_typesense-dev.wasm
 
-
       # Speech-to-text providers
       # ------------------------
 
@@ -386,7 +373,6 @@ components:
       # - type: wasm
       #   url: https://github.com/golemcloud/golem-ai/releases/download/v0.4.0-dev.1/golem_stt_whisper-dev.wasm
 
-
       # Video generation providers
       # --------------------------
 
@@ -405,7 +391,6 @@ components:
       ## Veo
       # - type: wasm
       #   url: https://github.com/golemcloud/golem-ai/releases/download/v0.4.0-dev.1/golem_video_veo-dev.wasm
-
 
       # WebSearch providers
       # -------------------

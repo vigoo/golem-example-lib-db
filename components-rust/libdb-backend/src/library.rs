@@ -25,7 +25,12 @@ pub trait Library {
     fn new(reference: LibraryReference) -> Self;
 
     fn analysis_failed(&mut self, message: String);
-    async fn analysis_succeeded(&mut self, repository: Uri, description: String, tags: Vec<String>);
+    async fn analysis_succeeded(
+        &mut self,
+        repository: Uri,
+        description: String,
+        topics: Vec<String>,
+    );
 
     fn get_details(&self) -> Result<LibraryDetails, String>;
 }

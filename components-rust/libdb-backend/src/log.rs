@@ -1,15 +1,6 @@
 use golem_rust::bindings::wasi::logging::logging::log;
-use golem_rust::{agent_definition, agent_implementation, Schema};
-
-#[derive(Schema)]
-enum Level {
-    Trace,
-    Debug,
-    Info,
-    Warning,
-    Error,
-    Critical,
-}
+use golem_rust::bindings::wasi::logging::logging::Level;
+use golem_rust::{agent_definition, agent_implementation};
 
 /// Log aggregation agent
 #[agent_definition]
@@ -27,20 +18,7 @@ impl Log for LogImpl {
     }
 
     fn log(&self, level: Level, sender: String, message: String) {
-        log(level.into(), &sender, &message)
-    }
-}
-
-impl From<Level> for golem_rust::bindings::wasi::logging::logging::Level {
-    fn from(value: Level) -> Self {
-        match value {
-            Level::Trace => Self::Trace,
-            Level::Debug => Self::Debug,
-            Level::Info => Self::Info,
-            Level::Warning => Self::Warn,
-            Level::Error => Self::Error,
-            Level::Critical => Self::Critical,
-        }
+        log(level, &sender, &message)
     }
 }
 
@@ -60,11 +38,7 @@ impl Logger {
     }
 
     pub fn trace(&self, message: impl AsRef<str>) {
-        log(
-            golem_rust::bindings::wasi::logging::logging::Level::Trace,
-            &self.sender,
-            message.as_ref(),
-        );
+        log(Level::Trace, &self.sender, message.as_ref());
         self.client.trigger_log(
             Level::Trace,
             self.sender.clone(),
@@ -73,11 +47,7 @@ impl Logger {
     }
 
     pub fn debug(&self, message: impl AsRef<str>) {
-        log(
-            golem_rust::bindings::wasi::logging::logging::Level::Debug,
-            &self.sender,
-            message.as_ref(),
-        );
+        log(Level::Debug, &self.sender, message.as_ref());
         self.client.trigger_log(
             Level::Debug,
             self.sender.clone(),
@@ -86,11 +56,7 @@ impl Logger {
     }
 
     pub fn info(&self, message: impl AsRef<str>) {
-        log(
-            golem_rust::bindings::wasi::logging::logging::Level::Info,
-            &self.sender,
-            message.as_ref(),
-        );
+        log(Level::Info, &self.sender, message.as_ref());
         self.client.trigger_log(
             Level::Info,
             self.sender.clone(),
@@ -99,24 +65,16 @@ impl Logger {
     }
 
     pub fn warn(&self, message: impl AsRef<str>) {
-        log(
-            golem_rust::bindings::wasi::logging::logging::Level::Warn,
-            &self.sender,
-            message.as_ref(),
-        );
+        log(Level::Warn, &self.sender, message.as_ref());
         self.client.trigger_log(
-            Level::Warning,
+            Level::Warn,
             self.sender.clone(),
             message.as_ref().to_string(),
         );
     }
 
     pub fn error(&self, message: impl AsRef<str>) {
-        log(
-            golem_rust::bindings::wasi::logging::logging::Level::Error,
-            &self.sender,
-            message.as_ref(),
-        );
+        log(Level::Error, &self.sender, message.as_ref());
         self.client.trigger_log(
             Level::Error,
             self.sender.clone(),
@@ -125,11 +83,7 @@ impl Logger {
     }
 
     pub fn critical(&self, message: impl AsRef<str>) {
-        log(
-            golem_rust::bindings::wasi::logging::logging::Level::Critical,
-            &self.sender,
-            message.as_ref(),
-        );
+        log(Level::Critical, &self.sender, message.as_ref());
         self.client.trigger_log(
             Level::Critical,
             self.sender.clone(),

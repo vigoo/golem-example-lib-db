@@ -18,7 +18,7 @@ pub trait Topic {
 
     fn record_failure(&mut self, failure: String);
 
-    fn get_libraries(&self) -> Result<Vec<LibraryReference>, Vec<String>>; // Cannot use HashSet
+    fn get_libraries(&self) -> Result<HashSet<LibraryReference>, Vec<String>>;
 }
 
 struct TopicImpl {
@@ -64,9 +64,9 @@ impl Topic for TopicImpl {
         self.failures.push(failure);
     }
 
-    fn get_libraries(&self) -> Result<Vec<LibraryReference>, Vec<String>> {
+    fn get_libraries(&self) -> Result<HashSet<LibraryReference>, Vec<String>> {
         if self.failures.is_empty() {
-            Ok(self.libraries.iter().cloned().collect())
+            Ok(self.libraries.clone())
         } else {
             Err(self.failures.clone())
         }

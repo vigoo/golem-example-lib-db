@@ -11,7 +11,7 @@ use http::Uri;
 pub trait LibraryAnalysis {
     fn new(reference: LibraryReference) -> Self;
 
-    async fn run(&mut self, parent_tag: Option<String>, repo_uri: Uri);
+    async fn run(&mut self, parent_topic: Option<String>, repo_uri: Uri);
 }
 
 struct LibraryAnalysisImpl {
@@ -28,7 +28,7 @@ impl LibraryAnalysis for LibraryAnalysisImpl {
         }
     }
 
-    async fn run(&mut self, parent_tag: Option<String>, repo_uri: Uri) {
+    async fn run(&mut self, parent_topic: Option<String>, repo_uri: Uri) {
         let response = send(&[Event::Message(
             Message {
                 role: Role::User,
@@ -82,7 +82,7 @@ impl LibraryAnalysis for LibraryAnalysisImpl {
                                 .into_iter()
                                 .map(|t| t.to_lowercase())
                                 .collect::<Vec<String>>();
-                            if let Some(parent_tag) = parent_tag {
+                            if let Some(parent_tag) = parent_topic {
                                 final_tags.push(parent_tag);
                             }
                             library
