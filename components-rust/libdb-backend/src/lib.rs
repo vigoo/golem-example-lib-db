@@ -7,6 +7,7 @@ mod topic_discovery;
 
 use crate::log::Logger;
 use golem_rust::{agent_definition, agent_implementation, Schema};
+use http::Uri;
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Schema)]
@@ -19,7 +20,7 @@ pub enum Language {
 pub struct LibraryReference {
     name: String,
     language: Language,
-    repository: String, // cannot use Uri,
+    repository: Uri,
 }
 
 impl Display for LibraryReference {

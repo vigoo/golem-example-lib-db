@@ -31,8 +31,8 @@ httpApi:
               let agent = topic(name);
               let res = agent.get-libraries();
               match res {
-                ok(libraries) => { status: 200, libraries: some(libraries), failures: none },
-                err(failures) => { status: 500, libraries: none, failures: some(failures) }
+                ok(libraries) => { status: 200, body: { libraries: some(libraries), failures: none } },
+                err(failures) => { status: 500, body: { libraries: none, failures: some(failures) } }
               }
         - method: GET
           path: /libdb-backend-api/topics
@@ -51,7 +51,9 @@ httpApi:
             response: |
               let agent = catalog();
               let libs = agent.get-libraries();
-              { status: 200, libs: libs }
+              { status: 200, body: { libraries: libs } }
+        - method: GET
+          path: /libdb-backend-api/libs/{language}/{name}/{uri}
 
   deployments:
     local:

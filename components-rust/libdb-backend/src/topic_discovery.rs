@@ -5,6 +5,9 @@ use crate::{Language, LibraryReference};
 use golem_rust::golem_ai::golem::web_search::types::{SearchParams, SearchResult};
 use golem_rust::golem_ai::golem::web_search::web_search::start_search;
 use golem_rust::{agent_definition, agent_implementation};
+use http::uri::Scheme;
+use http::Uri;
+use std::str::FromStr;
 
 /// Background job for each Topic agent, only created on an explicit discover_libraries() call.
 /// It uses a web search API to look for libraries for various programming languages and a given
@@ -102,12 +105,23 @@ fn extract_github_repo_name(url: String) -> String {
         .to_string()
 }
 
-fn extract_github_repo(url: String) -> String {
-    url.strip_prefix("https://github.com/")
-        .and_then(|path| {
-            let owner = path.split('/').next()?;
-            let repo = path.split('/').nth(1)?;
-            Some(format!("https://github.com/{}/{}", owner, repo))
-        })
-        .unwrap_or_default()
+fn extract_github_repo(url: String) -> Uri {
+    try_extract_github_repo(url).unwrap_or_default()
+}
+
+fn try_extract_github_repo(url: String) -> Option<Uri> {
+    let url = Uri::from_str(&url).ok()?;
+    if url.host() == Some("github.com") {
+        let path = url.path();
+        let owner = path.split('/').next()?;
+        let repo = path.split('/').nth(1)?;
+        Uri::builder()
+            .scheme(Scheme::HTTPS)
+            .authority("github.com")
+            .path_and_query(format!("/{}/{}", owner, repo))
+            .build()
+            .ok()
+    } else {
+        None
+    }
 }
