@@ -85,9 +85,10 @@ impl TopicDiscovery for TopicDiscoveryImpl {
                     let mut library_analysis = LibraryAnalysisClient::get(LibraryReference {
                         name: extract_github_repo_name(result.url.clone()),
                         language,
-                        repository: extract_github_repo(result.url),
                     });
-                    library_analysis.run(Some(self.name.clone())).await;
+                    library_analysis
+                        .run(Some(self.name.clone()), extract_github_repo(result.url))
+                        .await;
                 }
             }
             Err(err) => {
@@ -113,8 +114,8 @@ fn try_extract_github_repo(url: String) -> Option<Uri> {
     let url = Uri::from_str(&url).ok()?;
     if url.host() == Some("github.com") {
         let path = url.path();
-        let owner = path.split('/').next()?;
-        let repo = path.split('/').nth(1)?;
+        let owner = path.split('/').nth(1)?;
+        let repo = path.split('/').nth(2)?;
         Uri::builder()
             .scheme(Scheme::HTTPS)
             .authority("github.com")

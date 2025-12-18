@@ -53,7 +53,21 @@ httpApi:
               let libs = agent.get-libraries();
               { status: 200, body: { libraries: libs } }
         - method: GET
-          path: /libdb-backend-api/libs/{language}/{name}/{uri}
+          path: /libdb-backend-api/libs/{language}/{name}
+          binding:
+            type: default
+            componentName: libdb:backend
+            response: |         
+              let lang = match request.path.language {
+                "rust" => rust,
+                "java-script" => java-script,
+              };
+              let agent = library({ name: request.path.name, language: lang });
+              let res = agent.get-details();
+              match res {
+                ok(details) => { status: 200, body: { details: some(details), error: none } },
+                err(message) => { status: 500, body: { details: none, error: some(message) } }
+              }
 
   deployments:
     local:
@@ -214,8 +228,8 @@ components:
       # BRAVE_API_KEY: "<KEY>"
 
       ## Google
-      GOOGLE_API_KEY: "AIzaSyCXRMxSTkfBk7h90_ZJ8df_zj5uCK9nQto"
-      GOOGLE_SEARCH_ENGINE_ID: "9380058f68d6c42f0"
+      GOOGLE_API_KEY: "{{ GOOGLE_API_KEY }}"
+      GOOGLE_SEARCH_ENGINE_ID: "{{ GOOGLE_SEARCH_ENGINE_ID }}"
 
     ## Serper
     # SERPER_API_KEY: "<KEY>"

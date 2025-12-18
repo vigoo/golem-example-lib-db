@@ -3,6 +3,7 @@ use crate::log::Logger;
 use crate::LibraryReference;
 use golem_rust::golem_ai::golem::llm::llm::{send, Config, ContentPart, Event, Message, Role};
 use golem_rust::{agent_definition, agent_implementation};
+use http::Uri;
 
 /// Background job for each Library agent, triggered on creation. It uses LLM to
 /// gather more information about the library.
@@ -10,7 +11,7 @@ use golem_rust::{agent_definition, agent_implementation};
 pub trait LibraryAnalysis {
     fn new(reference: LibraryReference) -> Self;
 
-    async fn run(&mut self, parent_tag: Option<String>);
+    async fn run(&mut self, parent_tag: Option<String>, repo_uri: Uri);
 }
 
 struct LibraryAnalysisImpl {
@@ -27,27 +28,27 @@ impl LibraryAnalysis for LibraryAnalysisImpl {
         }
     }
 
-    async fn run(&mut self, parent_tag: Option<String>) {
+    async fn run(&mut self, parent_tag: Option<String>, repo_uri: Uri) {
         let response = send(&[Event::Message(
             Message {
                 role: Role::User,
                 name: None,
                 content: vec![
-                    ContentPart::Text(format!("Let's analyse the GitHub repository at {}. First check if this is a library for {:?}. If it is, then come up with a list of tags describing what this library is for, and return it as a JSON array of strings. If it is not for the given language, return an empty tag array.", self.reference.repository, self.reference.language)),
+                    ContentPart::Text(format!("Let's analyse the GitHub repository at {}. First check if this is a library for {:?}. If it is, then come up with a list of tags describing what this library is for, and return it as a JSON array of strings. If it is not for the given language, return an empty tag array.", repo_uri, self.reference.language)),
                     ContentPart::Text("In addition to the array of tags, also return a short description of the library in a separate field of the result JSON object.".to_string()),
                     ContentPart::Text("Always response with a JSON object with the following structure: { \"description\": \"short description of the library\", \"tags\": [\"tag1\", \"tag2\", ...] }".to_string()),
                 ],
             }
         )],
-                            &Config {
-                                model: "gpt-3.5-turbo".to_string(),
-                                temperature: None,
-                                max_tokens: None,
-                                stop_sequences: None,
-                                tools: None,
-                                tool_choice: None,
-                                provider_options: None,
-                            },
+        &Config {
+            model: "gpt-3.5-turbo".to_string(),
+            temperature: None,
+            max_tokens: None,
+            stop_sequences: None,
+            tools: None,
+            tool_choice: None,
+            provider_options: None,
+        },
         );
 
         let mut library = LibraryClient::get(self.reference.clone());
@@ -85,7 +86,7 @@ impl LibraryAnalysis for LibraryAnalysisImpl {
                                 final_tags.push(parent_tag);
                             }
                             library
-                                .analysis_succeeded(response.description, final_tags)
+                                .analysis_succeeded(repo_uri, response.description, final_tags)
                                 .await;
                         }
                     }

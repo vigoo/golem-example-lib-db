@@ -1,42 +1,48 @@
 use crate::catalog::CatalogClient;
-use crate::library_analysis::LibraryAnalysisClient;
 use crate::log::Logger;
 use crate::topic::TopicClient;
-use crate::LibraryReference;
+use crate::{LibraryDetails, LibraryReference};
 use golem_rust::{agent_definition, agent_implementation};
+use http::Uri;
 use std::collections::HashSet;
 
+enum LibraryState {
+    Unknown,
+    Analysed {
+        repository: Uri,
+        description: String,
+        topics: HashSet<String>,
+    },
+    Failed {
+        message: String,
+    },
+}
+
 /// Agent representing a library. Initially it has no other information than
-/// its reference, but it gets more details once the analysis completes.
+/// its reference (name and language pair), but it gets more details once the analysis completes.
 #[agent_definition]
 pub trait Library {
     fn new(reference: LibraryReference) -> Self;
 
     fn analysis_failed(&mut self, message: String);
-    async fn analysis_succeeded(&mut self, description: String, tags: Vec<String>);
+    async fn analysis_succeeded(&mut self, repository: Uri, description: String, tags: Vec<String>);
 
-    fn get_details(&self) -> Result<(String, Vec<String>), String>;
+    fn get_details(&self) -> Result<LibraryDetails, String>;
 }
 
 struct LibraryImpl {
     reference: LibraryReference,
-    failure: Option<String>,
-    description: String,
-    topics: HashSet<String>,
+    state: LibraryState,
     logger: Logger,
 }
 
 #[agent_implementation]
 impl Library for LibraryImpl {
     fn new(reference: LibraryReference) -> Self {
-        let mut analysis = LibraryAnalysisClient::get(reference.clone());
-        analysis.trigger_run(None);
         Self {
             logger: Logger::new(&format!("library {reference}")),
             reference,
-            failure: None,
-            description: "".to_string(),
-            topics: HashSet::new(),
+            state: LibraryState::Unknown,
         }
     }
 
@@ -44,33 +50,49 @@ impl Library for LibraryImpl {
         self.logger
             .error(format!("Library analysis failed: {message}"));
 
-        self.failure = Some(message);
+        self.state = LibraryState::Failed { message };
     }
 
-    async fn analysis_succeeded(&mut self, description: String, tags: Vec<String>) {
+    async fn analysis_succeeded(
+        &mut self,
+        repository: Uri,
+        description: String,
+        topics: Vec<String>,
+    ) {
         self.logger.info(format!(
-            "Library analysis succeeded with description: {description} and tags: {tags:?}"
+            "Library analysis based on {repository} succeeded with description: {description} and topics: {topics:?}"
         ));
 
-        self.description = description;
-        self.topics = tags.into_iter().collect();
-
-        let mut catalog = CatalogClient::get();
-        catalog.trigger_register_library(self.reference.clone());
-
-        for topic in &self.topics {
+        for topic in &topics {
             let mut topic = TopicClient::get(topic.clone());
             topic.trigger_add(self.reference.clone());
         }
+
+        self.state = LibraryState::Analysed {
+            repository,
+            description,
+            topics: topics.into_iter().collect(),
+        };
+
+        let mut catalog = CatalogClient::get();
+        catalog.trigger_register_library(self.reference.clone());
     }
 
-    fn get_details(&self) -> Result<(String, Vec<String>), String> {
-        match &self.failure {
-            Some(message) => Err(message.clone()),
-            None => Ok((
-                self.description.clone(),
-                self.topics.iter().cloned().collect(),
-            )),
+    fn get_details(&self) -> Result<LibraryDetails, String> {
+        match &self.state {
+            LibraryState::Failed { message } => Err(message.clone()),
+            LibraryState::Analysed {
+                description,
+                topics,
+                repository,
+            } => Ok(LibraryDetails {
+                description: description.clone(),
+                name: self.reference.name.clone(),
+                language: self.reference.language.clone(),
+                repository: repository.clone(),
+                topics: topics.iter().cloned().collect(),
+            }),
+            LibraryState::Unknown => Err("Library not yet analysed".to_string()),
         }
     }
 }
