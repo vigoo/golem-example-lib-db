@@ -4,6 +4,7 @@ mod library_analysis;
 mod log;
 mod topic;
 mod topic_discovery;
+mod frontend;
 
 use crate::log::Logger;
 use golem_rust::{agent_definition, agent_implementation, Schema};

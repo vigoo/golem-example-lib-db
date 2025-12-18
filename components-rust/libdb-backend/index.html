@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Discovery</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        nav {
+            display: flex;
+            gap: 10px;
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            flex-wrap: wrap;
+        }
+
+        nav button {
+            padding: 10px 20px;
+            border: none;
+            background: #f0f0f0;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        nav button.active {
+            background: #667eea;
+            color: white;
+        }
+
+        nav button:hover:not(.active) {
+            background: #e0e0e0;
+        }
+
+        main {
+            padding: 20px;
+            min-height: 400px;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 4px solid #f0f0f0;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #fee;
+            border: 1px solid #fcc;
+            color: #c33;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+
+        .success {
+            background: #efe;
+            border: 1px solid #cfc;
+            color: #3c3;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-box input {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .search-box button {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .search-box button:hover {
+            background: #5568d3;
+        }
+
+        .library-item, .topic-item {
+            border: 1px solid #e0e0e0;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        .library-item:hover, .topic-item:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .library-item h3, .topic-item h3 {
+            margin-bottom: 8px;
+            color: #667eea;
+        }
+
+        .library-item.detailed {
+            background: #f9f9f9;
+        }
+
+        .library-meta {
+            display: flex;
+            gap: 15px;
+            margin: 10px 0;
+            flex-wrap: wrap;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #e8eaf6;
+            color: #667eea;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+
+        .topics-list {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 10px 0;
+        }
+
+        .topic-tag {
+            background: #f0f0f0;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .topic-tag:hover {
+            background: #e0e0e0;
+        }
+
+        .library-tag {
+            background: #f0f0f0;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-block;
+        }
+
+        .library-tag:hover {
+            background: #e8eaf6;
+            color: #667eea;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-small {
+            padding: 8px 15px;
+            font-size: 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-info {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .btn-info:hover {
+            background: #bbdefb;
+        }
+
+        .btn-discover {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        .btn-discover:hover {
+            background: #e1bee7;
+        }
+
+        .details-panel {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .details-panel h4 {
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+
+        .details-panel p {
+            margin: 8px 0;
+            line-height: 1.5;
+            color: #555;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+
+        .discovery-status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            background: #fafafa;
+            border: 1px solid #e0e0e0;
+        }
+
+        .discovery-status h4 {
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+
+        .failures-list {
+            background: #fee;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+
+        .failures-list li {
+            color: #c33;
+            margin: 5px 0;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 24px;
+            }
+
+            nav {
+                flex-direction: column;
+            }
+
+            nav button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📚 Library Discovery</h1>
+            <p>Explore and discover libraries across topics and languages</p>
+        </header>
+
+        <nav>
+            <button class="nav-btn active" data-section="libraries">Libraries</button>
+            <button class="nav-btn" data-section="topics">Topics</button>
+            <button class="nav-btn" data-section="discover">Discover</button>
+        </nav>
+
+        <main>
+            <!-- Libraries Section -->
+            <div id="libraries" class="section active">
+                <div class="search-box">
+                    <input type="text" id="lib-search" placeholder="Search libraries by name or language...">
+                    <button onclick="searchLibraries()">Search</button>
+                    <button onclick="refreshLibraries()" style="background: #f0f0f0; color: #333;">🔄 Refresh</button>
+                </div>
+                <div id="libraries-list"></div>
+            </div>
+
+            <!-- Topics Section -->
+            <div id="topics" class="section">
+                <div class="search-box">
+                    <input type="text" id="topic-search" placeholder="Search topics...">
+                    <button onclick="searchTopic()">Search</button>
+                    <button onclick="refreshTopics()" style="background: #f0f0f0; color: #333;">🔄 Refresh</button>
+                </div>
+                <div id="topics-list"></div>
+            </div>
+
+            <!-- Discover Section -->
+            <div id="discover" class="section">
+                <div class="search-box">
+                    <input type="text" id="discover-search" placeholder="Enter a topic name to discover libraries...">
+                    <button onclick="discoverLibraries()">Start Discovery</button>
+                </div>
+                <div id="discover-result"></div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const API_BASE = 'http://lib-db.localhost:9006';
+        let allLibraries = [];
+        let allTopics = [];
+
+        // Navigation
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById(btn.dataset.section).classList.add('active');
+                
+                if (btn.dataset.section === 'libraries' && allLibraries.length === 0) {
+                    loadLibraries();
+                } else if (btn.dataset.section === 'topics' && allTopics.length === 0) {
+                    loadTopics();
+                }
+            });
+        });
+
+        // Load all libraries
+        async function loadLibraries() {
+            const container = document.getElementById('libraries-list');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div><p>Loading libraries...</p></div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/libdb-backend-api/libs`);
+                const data = await response.json();
+                allLibraries = data.libraries || [];
+                renderLibraries(allLibraries);
+            } catch (error) {
+                container.innerHTML = `<div class="error">Error loading libraries: ${error.message}</div>`;
+            }
+        }
+
+        // Render libraries
+        function renderLibraries(libraries) {
+            const container = document.getElementById('libraries-list');
+            if (libraries.length === 0) {
+                container.innerHTML = '<p style="color: #999; text-align: center; padding: 40px;">No libraries found</p>';
+                return;
+            }
+
+            container.innerHTML = libraries.map(lib => `
+                <div class="library-item">
+                    <h3>${lib.name}</h3>
+                    <div class="library-meta">
+                        <span class="badge">${lib.language}</span>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn-small btn-info" onclick="loadLibraryDetails('${lib.language}', '${lib.name}')">View Details</button>
+                    </div>
+                    <div id="details-${lib.language}-${lib.name}"></div>
+                </div>
+            `).join('');
+        }
+
+        // Load library details
+        async function loadLibraryDetails(language, name) {
+            const detailsId = `details-${language}-${name}`;
+            const container = document.getElementById(detailsId);
+            container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/libdb-backend-api/libs/${language}/${name}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    container.innerHTML = `<div class="error">${data.error}</div>`;
+                } else if (data.details) {
+                    const details = data.details;
+                    const topicsHtml = details.topics && details.topics.length > 0
+                        ? `<div class="topics-list">${details.topics.map(t => `<span class="topic-tag" onclick="navigateAndSearch('topics', '${t}')">${t}</span>`).join('')}</div>`
+                        : '<p style="color: #999;">No topics</p>';
+                    
+                    container.innerHTML = `
+                        <div class="details-panel">
+                            <h4>Details</h4>
+                            <p><strong>Description:</strong> ${details.description || 'N/A'}</p>
+                            <p><strong>Repository:</strong> <a href="${details.repository.value}" target="_blank">${details.repository.value}</a></p>
+                            <p><strong>Topics:</strong></p>
+                            ${topicsHtml}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                container.innerHTML = `<div class="error">Error loading details: ${error.message}</div>`;
+            }
+        }
+
+        // Search libraries
+        function searchLibraries() {
+            const query = document.getElementById('lib-search').value.toLowerCase();
+            const filtered = allLibraries.filter(lib => 
+                lib.name.toLowerCase().includes(query) || 
+                lib.language.toLowerCase().includes(query)
+            );
+            renderLibraries(filtered);
+        }
+
+        // Load all topics
+        async function loadTopics() {
+            const container = document.getElementById('topics-list');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div><p>Loading topics...</p></div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/libdb-backend-api/topics`);
+                const data = await response.json();
+                allTopics = data.topics || [];
+                renderTopics(allTopics);
+            } catch (error) {
+                container.innerHTML = `<div class="error">Error loading topics: ${error.message}</div>`;
+            }
+        }
+
+        // Render topics
+        function renderTopics(topics) {
+            const container = document.getElementById('topics-list');
+            if (topics.length === 0) {
+                container.innerHTML = '<p style="color: #999; text-align: center; padding: 40px;">No topics found</p>';
+                return;
+            }
+
+            container.innerHTML = topics.map(topic => `
+                <div class="topic-item">
+                    <h3>${topic}</h3>
+                    <div class="action-buttons">
+                        <button class="btn-small btn-info" onclick="loadTopicLibraries('${topic}')">View Libraries</button>
+                        <button class="btn-small btn-discover" onclick="startDiscovery('${topic}')">Discover</button>
+                    </div>
+                    <div id="topic-libs-${topic}"></div>
+                    <div id="topic-discovery-${topic}"></div>
+                </div>
+            `).join('');
+        }
+
+        // Search topic
+        function searchTopic() {
+            const query = document.getElementById('topic-search').value.toLowerCase();
+            const filtered = allTopics.filter(t => t.toLowerCase().includes(query));
+            renderTopics(filtered);
+        }
+
+        // Refresh libraries
+        function refreshLibraries() {
+            document.getElementById('lib-search').value = '';
+            allLibraries = [];
+            loadLibraries();
+        }
+
+        // Refresh topics
+        function refreshTopics() {
+            document.getElementById('topic-search').value = '';
+            allTopics = [];
+            loadTopics();
+        }
+
+        // Load libraries for a topic
+        async function loadTopicLibraries(topicName) {
+            const container = document.getElementById(`topic-libs-${topicName}`);
+            container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/libdb-backend-api/topics/${topicName}`);
+                const data = await response.json();
+                
+                if (!data.libraries || data.libraries.length === 0) {
+                    container.innerHTML = '<p style="color: #999; padding: 10px;">No libraries found for this topic</p>';
+                } else {
+                    container.innerHTML = `
+                        <div class="details-panel">
+                            <h4>Libraries (${data.libraries.length})</h4>
+                            <div class="topics-list">
+                                ${data.libraries.map(lib => `
+                                    <span class="library-tag" onclick="jumpToLibrary('${lib.language}', '${lib.name}')">${lib.name} <span class="badge">${lib.language}</span></span>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                if (data.failures && data.failures.length > 0) {
+                    container.innerHTML += `
+                        <div class="failures-list">
+                            <strong>Failures:</strong>
+                            <ul>
+                                ${data.failures.map(f => `<li>${f}</li>`).join('')}
+                            </ul>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                container.innerHTML = `<div class="error">Error loading topic libraries: ${error.message}</div>`;
+            }
+        }
+
+        // Start discovery
+        async function startDiscovery(topicName) {
+            const container = document.getElementById(`topic-discovery-${topicName}`);
+            container.innerHTML = '<div class="loading"><div class="spinner"></div><p>Discovering libraries...</p></div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/libdb-backend-api/topics/${topicName}/discover-libraries`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                container.innerHTML = `
+                    <div class="success">
+                        <strong>Discovery Result:</strong> ${data.result}
+                    </div>
+                `;
+
+                // Reload topics after discovery
+                setTimeout(() => loadTopics(), 1000);
+            } catch (error) {
+                container.innerHTML = `<div class="error">Error discovering libraries: ${error.message}</div>`;
+            }
+        }
+
+        // Discover from search
+        async function discoverLibraries() {
+            const topicName = document.getElementById('discover-search').value.trim();
+            if (!topicName) {
+                alert('Please enter a topic name');
+                return;
+            }
+
+            const container = document.getElementById('discover-result');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div><p>Discovering libraries for topic: ' + topicName + '...</p></div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/libdb-backend-api/topics/${topicName}/discover-libraries`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                container.innerHTML = `
+                    <div class="discovery-status">
+                        <h4>Discovery Result</h4>
+                        <p><strong>Topic:</strong> ${topicName}</p>
+                        <p><strong>Result:</strong> ${data.result}</p>
+                    </div>
+                    <button class="btn-small btn-info" onclick="loadTopicLibraries('${topicName}')">View Discovered Libraries</button>
+                `;
+            } catch (error) {
+                container.innerHTML = `<div class="error">Error discovering libraries: ${error.message}</div>`;
+            }
+        }
+
+        // Navigate and search
+        function navigateAndSearch(section, searchTerm) {
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            
+            const navBtn = document.querySelector(`[data-section="${section}"]`);
+            navBtn.classList.add('active');
+            document.getElementById(section).classList.add('active');
+            
+            if (section === 'topics') {
+                document.getElementById('topic-search').value = searchTerm;
+                loadTopics();
+            }
+        }
+
+        // Jump to library and show details
+        function jumpToLibrary(language, name) {
+            // Navigate to libraries section
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            
+            const navBtn = document.querySelector('[data-section="libraries"]');
+            navBtn.classList.add('active');
+            document.getElementById('libraries').classList.add('active');
+            
+            // Clear search
+            document.getElementById('lib-search').value = '';
+            
+            // Load libraries if not already loaded
+            if (allLibraries.length === 0) {
+                loadLibraries().then(() => {
+                    setTimeout(() => focusAndOpenLibrary(language, name), 300);
+                });
+            } else {
+                renderLibraries(allLibraries);
+                focusAndOpenLibrary(language, name);
+            }
+        }
+
+        // Focus on library and open its details
+        function focusAndOpenLibrary(language, name) {
+            const elementId = `details-${language}-${name}`;
+            const element = document.getElementById(elementId);
+            
+            if (element) {
+                // Open details
+                loadLibraryDetails(language, name);
+                
+                // Scroll into view after a short delay
+                setTimeout(() => {
+                    element.parentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 100);
+            }
+        }
+
+        // Load libraries on page load
+        loadLibraries();
+    </script>
+</body>
+</html>

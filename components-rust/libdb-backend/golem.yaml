@@ -11,6 +11,21 @@ httpApi:
     libdb-backend-api:
       version: '0.0.1'
       routes:
+        - method: GET
+          path: /libdb-backend-api
+          binding:
+            type: default
+            componentName: "libdb:backend"
+            response: |
+              let agent = frontend();
+              let file = agent.index();
+              {
+                headers: { 
+                  Content-Type: "text/html; charset=utf-8"
+                },
+                body: file
+              }
+
         - method: POST
           path: /libdb-backend-api/topics/{name}/discover-libraries
           binding:
@@ -21,6 +36,10 @@ httpApi:
               let agent = topic(name);
               let new-value = agent.discover-libraries();
               { status: 200, body: { result: "Topic discovery started" } }
+        - method: OPTIONS
+          path: /libdb-backend-api/topics/{name}/discover-libraries
+          binding:
+            type: cors-preflight
         - method: GET
           path: /libdb-backend-api/topics/{name}
           binding:
@@ -34,6 +53,10 @@ httpApi:
                 ok(libraries) => { status: 200, body: { libraries: some(libraries), failures: none } },
                 err(failures) => { status: 500, body: { libraries: none, failures: some(failures) } }
               }
+        - method: OPTIONS
+          path: /libdb-backend-api/topics/{name}
+          binding:
+            type: cors-preflight
         - method: GET
           path: /libdb-backend-api/topics
           binding:
@@ -43,6 +66,10 @@ httpApi:
               let agent = catalog();
               let topics = agent.get-topics();
               { status: 200, topics: topics }
+        - method: OPTIONS
+          path: /libdb-backend-api/topics
+          binding:
+            type: cors-preflight
         - method: GET
           path: /libdb-backend-api/libs
           binding:
@@ -52,12 +79,16 @@ httpApi:
               let agent = catalog();
               let libs = agent.get-libraries();
               { status: 200, body: { libraries: libs } }
+        - method: OPTIONS
+          path: /libdb-backend-api/libs
+          binding:
+            type: cors-preflight
         - method: GET
           path: /libdb-backend-api/libs/{language}/{name}
           binding:
             type: default
             componentName: libdb:backend
-            response: |         
+            response: |
               let lang = match request.path.language {
                 "rust" => rust,
                 "java-script" => java-script,
@@ -68,7 +99,10 @@ httpApi:
                 ok(details) => { status: 200, body: { details: some(details), error: none } },
                 err(message) => { status: 500, body: { details: none, error: some(message) } }
               }
-
+        - method: OPTIONS
+          path: /libdb-backend-api/libs/{language}/{name}
+          binding:
+            type: cors-preflight
   deployments:
     local:
       - domain: lib-db.localhost:9006
@@ -78,6 +112,10 @@ httpApi:
 components:
   libdb:backend:
     templates: rust
+    files:
+      - sourcePath: index.html
+        targetPath: /index.html
+        permissions: read-only
 
     # Component environment variables can reference system environment variables with minijinja syntax:
     #
